@@ -27,10 +27,11 @@ function copyFileForce(sourcePath, destPath) {
   return true
 }
 
-function copyDirectoryContents(srcDir, destDir) {
+function copyDirectoryContents(srcDir, destDir, { force = false } = {}) {
   if (!fs.existsSync(srcDir)) return []
 
   const copied = []
+  const copy = force ? copyFileForce : copyFileIfMissing
   fs.mkdirSync(destDir, { recursive: true })
 
   for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
@@ -38,7 +39,7 @@ function copyDirectoryContents(srcDir, destDir) {
     const src = path.join(srcDir, entry.name)
     const fileName = safeFileName(entry.name)
     const dest = path.join(destDir, fileName)
-    if (copyFileIfMissing(src, dest)) {
+    if (copy(src, dest)) {
       copied.push({ from: src, to: `/uploads/${path.basename(destDir)}/${fileName}` })
     }
   }
@@ -47,12 +48,18 @@ function copyDirectoryContents(srcDir, destDir) {
 }
 
 /** Copy old website/public/uploads → backend/uploads */
-export function syncLegacyWebsiteUploads(backendUploadDir) {
+export function syncLegacyWebsiteUploads(backendUploadDir, { skipDirs = [] } = {}) {
   if (!fs.existsSync(legacyWebsiteUploadsDir)) return []
 
+  const skip = new Set(skipDirs.map((d) => d.replace(/\\/g, '/')))
   const copied = []
 
   const walk = (relativeDir = '') => {
+    const relNorm = relativeDir.replace(/\\/g, '/')
+    if (skip.has(relNorm) || [...skip].some((dir) => relNorm === dir || relNorm.startsWith(`${dir}/`))) {
+      return
+    }
+
     const current = path.join(legacyWebsiteUploadsDir, relativeDir)
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
       const rel = relativeDir ? `${relativeDir}/${entry.name}` : entry.name
@@ -87,13 +94,13 @@ export function resolveCmsAssetForUpload(assetPath, backendUploadDir, folder, { 
   return `/uploads/${folder}/${fileName}`
 }
 
-export function mapItemAssets(item, backendUploadDir, folder, fields = []) {
+export function mapItemAssets(item, backendUploadDir, folder, fields = [], { force = false } = {}) {
   if (!backendUploadDir || !item) return { ...item }
 
   const next = { ...item }
   for (const field of fields) {
     if (next[field]) {
-      next[field] = resolveCmsAssetForUpload(next[field], backendUploadDir, folder)
+      next[field] = resolveCmsAssetForUpload(next[field], backendUploadDir, folder, { force })
     }
   }
   return next
@@ -106,14 +113,16 @@ export function mapItemAssets(item, backendUploadDir, folder, fields = []) {
 export function migratePresentWebsiteImages(backendUploadDir) {
   fs.mkdirSync(backendUploadDir, { recursive: true })
 
-  const copied = [...syncLegacyWebsiteUploads(backendUploadDir)]
+  const copied = []
   const missing = []
 
   copied.push(
-    ...copyDirectoryContents(path.join(websitePublicDir, 'images'), path.join(backendUploadDir, 'training')),
+    ...copyDirectoryContents(path.join(websitePublicDir, 'images'), path.join(backendUploadDir, 'training'), { force: true }),
     ...copyDirectoryContents(path.join(websitePublicDir, 'brands'), path.join(backendUploadDir, 'partners')),
     ...copyDirectoryContents(path.join(websitePublicDir, 'course-logos'), path.join(backendUploadDir, 'course-logos')),
   )
+
+  copied.push(...syncLegacyWebsiteUploads(backendUploadDir, { skipDirs: ['training'] }))
 
   const raw = buildWebsiteSeedData()
 

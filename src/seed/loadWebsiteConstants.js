@@ -32,38 +32,38 @@ export function stableItemId(namespace, key) {
 export function buildWebsiteSeedData({ uploadDir } = {}) {
   return {
     courses: COURSE_DETAILS.map((course) => {
-      const item = mapItemAssets(course, uploadDir, 'courses', ['image'])
+      const item = mapItemAssets(course, uploadDir, 'courses', ['image'], { force: Boolean(uploadDir) })
       if (uploadDir && course.logo) {
-        item.logo = resolveCmsAssetForUpload(course.logo, uploadDir, 'course-logos')
+        item.logo = resolveCmsAssetForUpload(course.logo, uploadDir, 'course-logos', { force: true })
       }
       item.id = stableItemId('course', course.slug)
       return item
     }),
     placements: SUCCESSFUL_STUDENTS.map((student) => ({
-      ...mapItemAssets(student, uploadDir, 'placements', ['image']),
+      ...mapItemAssets(student, uploadDir, 'placements', ['image'], { force: Boolean(uploadDir) }),
       studentStatus: 'placed',
       id: stableItemId('placement', slugify(student.name)),
     })),
     partners: HIRING_PARTNER_BRANDS.map((partner) => ({
-      ...mapItemAssets(partner, uploadDir, 'partners', ['logo']),
+      ...mapItemAssets(partner, uploadDir, 'partners', ['logo'], { force: Boolean(uploadDir) }),
       id: stableItemId('partner', slugify(partner.name)),
     })),
     staff: FOUNDERS_INFO.map((member) => ({
-      ...mapItemAssets(member, uploadDir, 'staff', ['avatar']),
+      ...mapItemAssets(member, uploadDir, 'staff', ['avatar'], { force: Boolean(uploadDir) }),
       id: stableItemId('staff', slugify(member.name)),
     })),
     testimonials_recruiter: RECRUITER_TESTIMONIALS.map((item) => ({
-      ...mapItemAssets(item, uploadDir, 'recruiters', ['avatar']),
+      ...mapItemAssets(item, uploadDir, 'recruiters', ['avatar'], { force: Boolean(uploadDir) }),
       id: stableItemId('recruiter', slugify(item.name)),
     })),
     testimonials_video: VIDEO_TESTIMONIALS.map((item) => ({
-      ...mapItemAssets(item, uploadDir, 'testimonials', ['avatar']),
+      ...mapItemAssets(item, uploadDir, 'testimonials', ['avatar'], { force: Boolean(uploadDir) }),
       review: item.quote || item.review || '',
       quote: item.quote || item.review || '',
       id: stableItemId('video', slugify(item.studentName)),
     })),
     training_services: TRAINING_SERVICES.map((service) => ({
-      ...mapItemAssets(service, uploadDir, 'training', ['image']),
+      ...mapItemAssets(service, uploadDir, 'training', ['image'], { force: Boolean(uploadDir) }),
       id: stableItemId('training', service.icon),
     })),
   }

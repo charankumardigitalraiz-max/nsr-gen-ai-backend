@@ -150,6 +150,7 @@ export async function getDashboardStats() {
     staff: 0,
     enrollments: 0,
     enrollmentsNew: 0,
+    trainingServices: 0,
   }
 
   for (const row of rows) {

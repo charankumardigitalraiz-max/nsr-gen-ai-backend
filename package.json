@@ -8,7 +8,9 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed": "node src/seed/seed.js",
-    "seed:website": "node src/seed/seedWebsiteContent.js --force"
+    "seed:website": "node src/seed/seedWebsiteContent.js --force",
+    "migrate:images": "node src/seed/migrateWebsiteImages.js",
+    "migrate:images:db": "node src/seed/migrateWebsiteImages.js --update-db"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

@@ -36,7 +36,10 @@ export const env = {
   adminUsername: process.env.ADMIN_USERNAME || 'admin',
   adminPassword: process.env.ADMIN_PASSWORD || 'nsr@admin123',
   clientUrls: parseClientUrls(),
-  uploadDir: path.resolve(backendRoot, process.env.UPLOAD_DIR || '../website/public/uploads'),
+  uploadDir: path.resolve(
+    backendRoot,
+    process.env.UPLOAD_DIR || 'uploads',
+  ),
   rateLimit: {
     windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
     max: Number(process.env.RATE_LIMIT_MAX) || 200,

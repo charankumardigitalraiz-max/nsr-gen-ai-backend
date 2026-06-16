@@ -1,14 +1,27 @@
 import { connectDB, disconnectDB } from '../config/db.js'
 import Resource from '../models/Resource.js'
 import { RESOURCE_KEYS } from '../constants/resources.js'
+import { env } from '../config/env.js'
 import { buildWebsiteSeedData } from './loadWebsiteConstants.js'
+import { syncLegacyWebsiteUploads, migratePresentWebsiteImages } from './resolveCmsAssets.js'
 import { logger } from '../utils/logger.js'
 
 const force = process.argv.includes('--force')
 const onlyIfEmpty = !force
 
-export async function seedWebsiteContent({ onlyIfEmpty: skipWhenPopulated = onlyIfEmpty } = {}) {
-  const data = buildWebsiteSeedData()
+export async function seedWebsiteContent({
+  onlyIfEmpty: skipWhenPopulated = onlyIfEmpty,
+  uploadDir = env.uploadDir,
+} = {}) {
+  const legacyCopied = syncLegacyWebsiteUploads(uploadDir)
+  migratePresentWebsiteImages(uploadDir)
+  if (legacyCopied.length > 0) {
+    logger.info(`Synced ${legacyCopied.length} legacy file(s) from website/public/uploads`)
+  }
+
+  logger.info(`CMS images will be stored in backend: ${uploadDir}`)
+
+  const data = buildWebsiteSeedData({ uploadDir })
   const summary = []
 
   for (const key of RESOURCE_KEYS) {

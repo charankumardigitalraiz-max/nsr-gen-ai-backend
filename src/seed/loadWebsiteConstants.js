@@ -6,7 +6,9 @@ import {
   RECRUITER_TESTIMONIALS,
   VIDEO_TESTIMONIALS,
   FOUNDERS_INFO,
+  TRAINING_SERVICES,
 } from '../../../website/src/constants/cmsData.js'
+import { mapItemAssets, resolveCmsAssetForUpload } from './resolveCmsAssets.js'
 
 function slugify(text) {
   return String(text)
@@ -27,34 +29,42 @@ export function stableItemId(namespace, key) {
   ].join('-')
 }
 
-export function buildWebsiteSeedData() {
+export function buildWebsiteSeedData({ uploadDir } = {}) {
   return {
-    courses: COURSE_DETAILS.map((course) => ({
-      ...course,
-      id: stableItemId('course', course.slug),
-    })),
+    courses: COURSE_DETAILS.map((course) => {
+      const item = mapItemAssets(course, uploadDir, 'courses', ['image'])
+      if (uploadDir && course.logo) {
+        item.logo = resolveCmsAssetForUpload(course.logo, uploadDir, 'course-logos')
+      }
+      item.id = stableItemId('course', course.slug)
+      return item
+    }),
     placements: SUCCESSFUL_STUDENTS.map((student) => ({
-      ...student,
+      ...mapItemAssets(student, uploadDir, 'placements', ['image']),
       studentStatus: 'placed',
       id: stableItemId('placement', slugify(student.name)),
     })),
     partners: HIRING_PARTNER_BRANDS.map((partner) => ({
-      ...partner,
+      ...mapItemAssets(partner, uploadDir, 'partners', ['logo']),
       id: stableItemId('partner', slugify(partner.name)),
     })),
     staff: FOUNDERS_INFO.map((member) => ({
-      ...member,
+      ...mapItemAssets(member, uploadDir, 'staff', ['avatar']),
       id: stableItemId('staff', slugify(member.name)),
     })),
     testimonials_recruiter: RECRUITER_TESTIMONIALS.map((item) => ({
-      ...item,
+      ...mapItemAssets(item, uploadDir, 'recruiters', ['avatar']),
       id: stableItemId('recruiter', slugify(item.name)),
     })),
     testimonials_video: VIDEO_TESTIMONIALS.map((item) => ({
-      ...item,
+      ...mapItemAssets(item, uploadDir, 'testimonials', ['avatar']),
       review: item.quote || item.review || '',
       quote: item.quote || item.review || '',
       id: stableItemId('video', slugify(item.studentName)),
+    })),
+    training_services: TRAINING_SERVICES.map((service) => ({
+      ...mapItemAssets(service, uploadDir, 'training', ['image']),
+      id: stableItemId('training', service.icon),
     })),
   }
 }

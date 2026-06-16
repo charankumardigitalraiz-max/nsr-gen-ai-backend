@@ -5,6 +5,7 @@ export const RESOURCE_KEYS = [
   'staff',
   'testimonials_recruiter',
   'testimonials_video',
+  'training_services',
 ]
 
 export const STATS_KEY_MAP = {
@@ -14,4 +15,5 @@ export const STATS_KEY_MAP = {
   staff: 'staff',
   testimonials_recruiter: 'recruiter',
   testimonials_video: 'video',
+  training_services: 'trainingServices',
 }

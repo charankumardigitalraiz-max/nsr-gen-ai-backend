@@ -20,6 +20,13 @@ function copyFileIfMissing(sourcePath, destPath) {
   return true
 }
 
+function copyFileForce(sourcePath, destPath) {
+  if (!fs.existsSync(sourcePath)) return false
+  fs.mkdirSync(path.dirname(destPath), { recursive: true })
+  fs.copyFileSync(sourcePath, destPath)
+  return true
+}
+
 function copyDirectoryContents(srcDir, destDir) {
   if (!fs.existsSync(srcDir)) return []
 
@@ -63,7 +70,7 @@ export function syncLegacyWebsiteUploads(backendUploadDir) {
   return copied
 }
 
-export function resolveCmsAssetForUpload(assetPath, backendUploadDir, folder) {
+export function resolveCmsAssetForUpload(assetPath, backendUploadDir, folder, { force = false } = {}) {
   if (!assetPath) return ''
   if (/^https?:\/\//i.test(assetPath)) return assetPath
 
@@ -72,7 +79,8 @@ export function resolveCmsAssetForUpload(assetPath, backendUploadDir, folder) {
   const fileName = safeFileName(relative)
   const destPath = path.join(backendUploadDir, folder, fileName)
 
-  if (!copyFileIfMissing(sourcePath, destPath)) {
+  const copy = force ? copyFileForce : copyFileIfMissing
+  if (!copy(sourcePath, destPath)) {
     return assetPath
   }
 
@@ -111,7 +119,7 @@ export function migratePresentWebsiteImages(backendUploadDir) {
 
   const track = (assetPath, folder) => {
     if (!assetPath || /^https?:\/\//i.test(assetPath)) return
-    const result = resolveCmsAssetForUpload(assetPath, backendUploadDir, folder)
+    const result = resolveCmsAssetForUpload(assetPath, backendUploadDir, folder, { force: true })
     if (result.startsWith('/uploads/')) {
       const already = copied.some((row) => row.to === result)
       if (!already) copied.push({ from: path.join(websitePublicDir, assetPath.replace(/^\//, '')), to: result })
